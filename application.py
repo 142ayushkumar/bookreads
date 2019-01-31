@@ -26,12 +26,10 @@ def index():
     if 'username' in session:
         return render_template("index.html", username=session["username"])
     else:
-        print("here1")
         return redirect("/login")
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
-    print("check")
     if 'username' in session:
         return redirect("/")
     else:
@@ -51,8 +49,8 @@ def login():
             username = request.form['username']
             password = request.form['password']
             email = request.form['email']
-            if len(password) == 0 or len(username) == 0:
-                signup = 'password field can\'t be blank'
+            if len(password) == 0 or len(username) == 0 or len(email) == 0:
+                signup = 'any of the field can\'t be blank'
                 return render_template("login.html", signup=signup, error1=True)
             try:
                 db.execute("INSERT INTO users (email, username, password) VALUES (:email, :username, :password)", {"email":email, "username":username, "password":password})
