@@ -1,6 +1,25 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    for book in books:
-        print(f"<a href=""></a>")
+<div class="container">
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+        <tr>
+          <td>{{ loop.index + (page - 1) * per_page }}</td>
+          <td>{{ book }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pagination.links }}
+</div>
 {% endblock %}

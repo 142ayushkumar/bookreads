@@ -4,6 +4,8 @@ from flask import Flask, session, render_template, redirect, request
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from flask_paginate import Pagination, get_page_args
+
 
 app = Flask(__name__)
 
@@ -68,3 +70,24 @@ def login():
 def signout():
     session.clear()
     return redirect("/")
+
+books = db.execute("SELECT * FROM books").fetchall()
+def get_books(offset=0, per_page=10):
+    return books[offset: offset + per_page]
+
+@app.route('/books/')
+def show_books():
+    #books = db.execute("SELECT * FROM books").fetchall()
+    page, per_page, offset = get_page_args(page_parameter='page',
+                                           per_page_parameter='per_page')
+    total = len(books)
+    pagination_books = get_books(offset=offset, per_page=per_page)
+    pagination = Pagination(page=page, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
+    return render_template('books.html',
+                           books=pagination_books,
+                           page=page,
+                           per_page=per_page,
+                           pagination=pagination,
+                           )
+    
