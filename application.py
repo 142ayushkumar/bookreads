@@ -40,14 +40,12 @@ def login():
             username = request.form['username']
             password = request.form['password']
             login = 'Username or Password is incorrect'
-            print("error source")
             if db.execute("SELECT * FROM users WHERE username= :username AND password= :password", {"username": username, "password": password}).rowcount == 0:
                 return render_template("login.html", login=login, error=True)
             else:
                 session['username'] = username
                 return redirect("/")
         elif "sign-up" in request.form:
-            print("here11")   
             username = request.form['username']
             password = request.form['password']
             email = request.form['email']
@@ -77,7 +75,12 @@ def get_books(offset=0, per_page=10):
 
 @app.route('/books/')
 def show_books():
-    #books = db.execute("SELECT * FROM books").fetchall()
+    username = ""
+    if 'username' in session:
+        username = session['username']
+    else:
+        return redirect("/login")
+    books = db.execute("SELECT * FROM books").fetchall()
     page, per_page, offset = get_page_args(page_parameter='page',
                                            per_page_parameter='per_page')
     total = len(books)
@@ -89,5 +92,56 @@ def show_books():
                            page=page,
                            per_page=per_page,
                            pagination=pagination,
+                           username=username
                            )
-    
+discussions = db.execute("SELECT * FROM discussions").fetchall()
+
+def get_discussions(offset=0, per_page = 10):
+    return discussions[offset: offset + per_page]
+
+@app.route('/discussions')
+def show_discussions():
+    #discussions = db.execute("SELECT * FROM discussions").fetchall()
+    username = ""
+    if 'username' in session:
+        username = session['username']
+    else:
+        return redirect("/login")
+    page, per_page, offset = get_page_args(page_parameter='page',
+                                           per_page_parameter='per_page')
+    total = len(discussions)
+    print(total)
+    pagination_discussions = get_discussions(offset=offset, per_page=per_page)
+    pagination = Pagination(page=page, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
+    return render_template('discussions.html',
+                           discussions=pagination_discussions,
+                           page=page,
+                           per_page=per_page,
+                           pagination=pagination,
+                           username=usename
+                           )
+
+@app.route('/discussions/<int:discussion_id>', methods=['GET', 'POST'])
+def discussion(discussion_id):
+    username = ""
+    if 'username' in session:
+        username = session['username']
+    else:
+        return redirect("/login")
+    if 'comment' in request.form:
+        comment = request.form['comment']
+        username = session['username']
+        user = db.execute("SELECT user_id FROM users WHERE username=:username",{"username" : username}).fetchone()
+        user_id = user['user_id']
+        db.execute("INSERT INTO comments (discussion_id,comment, user_id) VALUES (:discussion_id, :comment, :user_id)",
+                    {"discussion_id": discussion_id, "comment" : comment, "user_id" : user_id})
+        db.commit()
+        temp_url = f'/discussions/{discussion_id}'
+        return redirect(temp_url)
+    discussion = db.execute("SELECT * FROM discussions WHERE discussion_id = :discussion_id", {"discussion_id" : discussion_id}).fetchone()
+    if discussion is None:
+        return render_template("error.html", message="No such discussion post.")
+    user = db.execute("SELECT * FROM users WHERE user_id = :user_id", {"user_id" : discussion['user_id']}).fetchone()
+    comments = db.execute("SELECT comments.comment, comments.comment_date, comments.user_id FROM comments INNER JOIN users ON comments.user_id = users.user_id")
+    return render_template("discussion.html", discussion=discussion, user=user, comments=comments, username=username)
