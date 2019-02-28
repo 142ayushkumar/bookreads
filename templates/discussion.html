@@ -26,11 +26,6 @@
                 <input type="Add comment" class="form-control" id="comment" aria-describedby="emailHelp" name="comment" placeholder="Add comment">
             </div>
             <input type="submit" value="Comment" name="Comment">
-            {% block signup %}
-                {% if error1 ==  true %}
-                    <div class="alert alert-danger">{{ signup }}</div>
-                {% endif %}
-            {% endblock %}
         </form>
     </div>
 {% endblock %}

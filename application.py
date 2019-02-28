@@ -119,7 +119,7 @@ def show_discussions():
                            page=page,
                            per_page=per_page,
                            pagination=pagination,
-                           username=usename
+                           username=username
                            )
 
 @app.route('/discussions/<int:discussion_id>', methods=['GET', 'POST'])
@@ -130,14 +130,16 @@ def discussion(discussion_id):
     else:
         return redirect("/login")
     if 'comment' in request.form:
+        temp_url = f'/discussions/{discussion_id}'
         comment = request.form['comment']
+        if len(comment) < 1:
+            return redirect(temp_url)
         username = session['username']
         user = db.execute("SELECT user_id FROM users WHERE username=:username",{"username" : username}).fetchone()
         user_id = user['user_id']
         db.execute("INSERT INTO comments (discussion_id,comment, user_id) VALUES (:discussion_id, :comment, :user_id)",
                     {"discussion_id": discussion_id, "comment" : comment, "user_id" : user_id})
         db.commit()
-        temp_url = f'/discussions/{discussion_id}'
         return redirect(temp_url)
     discussion = db.execute("SELECT * FROM discussions WHERE discussion_id = :discussion_id", {"discussion_id" : discussion_id}).fetchone()
     if discussion is None:
