@@ -145,5 +145,31 @@ def discussion(discussion_id):
     if discussion is None:
         return render_template("error.html", message="No such discussion post.")
     user = db.execute("SELECT * FROM users WHERE user_id = :user_id", {"user_id" : discussion['user_id']}).fetchone()
-    comments = db.execute("SELECT comments.comment, comments.comment_date, comments.user_id FROM comments INNER JOIN users ON comments.user_id = users.user_id")
+    comments = db.execute("SELECT comments.comment, comments.comment_date, comments.user_id, users.username FROM comments INNER JOIN users ON comments.user_id = users.user_id")
+    return render_template("discussion.html", discussion=discussion, user=user, comments=comments, username=username)
+
+@app.route("/books/<int:book_id>", methods=["GET", "POST"])
+def book(book_id):
+    username = ""
+    if 'username' in session:
+        username = session['username']
+    else:
+        return redirect("/login")
+    if 'comment' in request.form:
+        temp_url = f'/books/{book_id}'
+        comment = request.form['comment']
+        if len(comment) < 1:
+            return redirect(temp_url)
+        username = session['username']
+        user = db.execute("SELECT user_id FROM users WHERE username=:username",{"username" : username}).fetchone()
+        user_id = user['user_id']
+        db.execute("INSERT INTO comments (discussion_id,comment, user_id) VALUES (:discussion_id, :comment, :user_id)",
+                    {"discussion_id": discussion_id, "comment" : comment, "user_id" : user_id})
+        db.commit()
+        return redirect(temp_url)
+    discussion = db.execute("SELECT * FROM discussions WHERE discussion_id = :discussion_id", {"discussion_id" : discussion_id}).fetchone()
+    if discussion is None:
+        return render_template("error.html", message="No such discussion post.")
+    user = db.execute("SELECT * FROM users WHERE user_id = :user_id", {"user_id" : discussion['user_id']}).fetchone()
+    comments = db.execute("SELECT comments.comment, comments.comment_date, comments.user_id, users.username FROM comments INNER JOIN users ON comments.user_id = users.user_id")
     return render_template("discussion.html", discussion=discussion, user=user, comments=comments, username=username)

@@ -1,6 +1,4 @@
-# Project 1
-
-Web Programming with Python and JavaScript
+Building a book review website where user can register, log in, search and review for individual books
 
 ### To Do
 
